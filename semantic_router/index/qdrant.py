@@ -5,7 +5,6 @@ from pydantic.v1 import Field
 
 from semantic_router.index.base import BaseIndex
 from semantic_router.schema import Metric
-
 from semantic_router.utils.logger import logger
 
 DEFAULT_COLLECTION_NAME = "semantic-router-index"
@@ -97,7 +96,7 @@ class QdrantIndex(BaseIndex):
 
     def _initialize_clients(self):
         try:
-            from qdrant_client import QdrantClient, AsyncQdrantClient
+            from qdrant_client import AsyncQdrantClient, QdrantClient
 
             sync_client = QdrantClient(
                 location=self.location,
@@ -165,7 +164,12 @@ class QdrantIndex(BaseIndex):
             logger.error("Sync remove is not implemented for QdrantIndex.")
 
     def _sync_index(
-        self, local_route_names: List[str], local_utterances: List[str], dimensions: int
+        self,
+        local_route_names: List[str],
+        local_utterances_list: List[str],
+        local_function_schemas: List[Dict[str, Any]],
+        local_metadata_list: List[Dict[str, Any]],
+        dimensions: int,
     ):
         if self.sync is not None:
             logger.error("Sync remove is not implemented for QdrantIndex.")
@@ -175,6 +179,8 @@ class QdrantIndex(BaseIndex):
         embeddings: List[List[float]],
         routes: List[str],
         utterances: List[str],
+        function_schemas: Optional[List[Dict[str, Any]]] = None,
+        metadata_list: List[Dict[str, Any]] = [],
         batch_size: int = DEFAULT_UPLOAD_BATCH_SIZE,
     ):
         self.dimensions = self.dimensions or len(embeddings[0])
@@ -257,7 +263,7 @@ class QdrantIndex(BaseIndex):
         top_k: int = 5,
         route_filter: Optional[List[str]] = None,
     ) -> Tuple[np.ndarray, List[str]]:
-        from qdrant_client import models, QdrantClient
+        from qdrant_client import QdrantClient, models
 
         self.client: QdrantClient
         filter = None
@@ -271,15 +277,17 @@ class QdrantIndex(BaseIndex):
                 ]
             )
 
-        results = self.client.search(
+        results = self.client.query_points(
             self.index_name,
-            query_vector=vector,
+            query=vector,
             limit=top_k,
             with_payload=True,
             query_filter=filter,
         )
-        scores = [result.score for result in results]
-        route_names = [result.payload[SR_ROUTE_PAYLOAD_KEY] for result in results]
+        scores = [result.score for result in results.points]
+        route_names = [
+            result.payload[SR_ROUTE_PAYLOAD_KEY] for result in results.points
+        ]
         return np.array(scores), route_names
 
     async def aquery(
@@ -288,7 +296,7 @@ class QdrantIndex(BaseIndex):
         top_k: int = 5,
         route_filter: Optional[List[str]] = None,
     ) -> Tuple[np.ndarray, List[str]]:
-        from qdrant_client import models, AsyncQdrantClient
+        from qdrant_client import AsyncQdrantClient, models
 
         self.aclient: Optional[AsyncQdrantClient]
         if self.aclient is None:
@@ -306,15 +314,17 @@ class QdrantIndex(BaseIndex):
                 ]
             )
 
-        results = await self.aclient.search(
+        results = await self.aclient.query_points(
             self.index_name,
-            query_vector=vector,
+            query=vector,
             limit=top_k,
             with_payload=True,
             query_filter=filter,
         )
-        scores = [result.score for result in results]
-        route_names = [result.payload[SR_ROUTE_PAYLOAD_KEY] for result in results]
+        scores = [result.score for result in results.points]
+        route_names = [
+            result.payload[SR_ROUTE_PAYLOAD_KEY] for result in results.points
+        ]
         return np.array(scores), route_names
 
     def aget_routes(self):
