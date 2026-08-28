@@ -235,11 +235,54 @@ class TestBM25ATIREFormula:
         assert twice[alpha_id] / twice[epsilon_id] == pytest.approx(2.0)
         assert twice[alpha_id] > once[alpha_id]
 
-    def test_query_weights_sum_to_one(self, word_encoder):
-        """Deviation from the paper: query weights are L1 normalised."""
+    def test_query_weights_sum_to_inverse_k1_plus_one(self, word_encoder):
+        """Deviation from the paper: query weights are L1 normalised and then
+        scaled by 1/(k1+1), so that scores land in [0, 1].
+        """
+        expected = 1.0 / (word_encoder.k1 + 1.0)
         for query in ["alpha", "alpha beta", "alpha alpha beta gamma"]:
             embedding = word_encoder.encode_queries([query])[0]
-            assert embedding.embedding[:, 1].sum() == pytest.approx(1.0)
+            assert embedding.embedding[:, 1].sum() == pytest.approx(expected)
+
+    def test_scores_are_bounded_to_unit_interval(self, word_encoder):
+        """The reason for the 1/(k1+1) scaling: scores share the [0, 1] range of
+        the cosine similarities returned by the dense encoders.
+        """
+        queries = ["alpha", "alpha beta", "alpha alpha zeta", "gamma delta epsilon"]
+        documents = CORPUS + [
+            "alpha",
+            "alpha alpha alpha",
+            " ".join(VOCAB * 4),
+            "gamma",
+        ]
+        encoded_docs = [d.to_dict() for d in word_encoder.encode_documents(documents)]
+
+        for query in queries:
+            weights = word_encoder.encode_queries([query])[0].to_dict()
+            for doc, doc_weights in zip(documents, encoded_docs):
+                score = sum(v * doc_weights.get(k, 0.0) for k, v in weights.items())
+                assert 0.0 <= score <= 1.0, f"{query!r} vs {doc!r} scored {score}"
+
+    def test_query_normalisation_is_ranking_neutral(self, word_encoder):
+        """Normalisation is a positive constant per query, so it must not
+        reorder documents.
+        """
+        query = "alpha alpha gamma zeta"
+        documents = CORPUS + ["alpha gamma", "zeta zeta alpha", " ".join(VOCAB)]
+        encoded_docs = [d.to_dict() for d in word_encoder.encode_documents(documents)]
+
+        normalised = word_encoder.encode_queries([query])[0].to_dict()
+        # Undo both normalisation steps to recover the paper's raw weights.
+        total = sum(normalised.values())
+        raw = {k: v / total for k, v in normalised.items()}
+
+        def rank(weights):
+            scores = [
+                sum(v * d.get(k, 0.0) for k, v in weights.items()) for d in encoded_docs
+            ]
+            return list(np.argsort(-np.array(scores)))
+
+        assert rank(normalised) == rank(raw)
 
     def test_query_terms_outside_corpus_are_dropped(self, word_encoder):
         """Terms absent from the corpus have df=0, so no IDF can be computed and
@@ -249,8 +292,8 @@ class TestBM25ATIREFormula:
         weights = word_encoder.encode_queries(["alpha eta"])[0].to_dict()
 
         assert weights.get(eta_id, 0.0) == pytest.approx(0.0)
-        # The remaining weight still normalises to 1.
-        assert sum(weights.values()) == pytest.approx(1.0)
+        # The remaining weight still carries the full normalised mass.
+        assert sum(weights.values()) == pytest.approx(1.0 / (word_encoder.k1 + 1.0))
 
     def test_longer_documents_score_lower(self, word_encoder):
         """A single occurrence of a term is worth less in a longer document."""
