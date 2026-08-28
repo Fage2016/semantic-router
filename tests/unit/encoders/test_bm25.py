@@ -170,7 +170,7 @@ def atire_tf_component(tf: float, doc_len: int, k1: float, b: float) -> float:
     Written out longhand as a reference, independent of the vectorised
     implementation under test.
     """
-    return tf / (k1 * ((1.0 - b) + b * (doc_len / AVG_DOC_LEN)) + tf)
+    return ((k1 + 1.0) * tf) / (k1 * ((1.0 - b) + b * (doc_len / AVG_DOC_LEN)) + tf)
 
 
 @pytest.fixture

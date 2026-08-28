@@ -215,7 +215,7 @@ class BM25Encoder(SparseEncoder, FittableMixin, AsymmetricSparseMixin):
         r"""Returns document term frequency normed by itself & average trained corpus length
         (This is the right-hand side of the BM25 equation, which gets matmul-ed with the query IDF component)
 
-        LaTeX: $\frac{f(d_i, D)}{f(d_i, D) + k_1 \times (1 - b + b \times \frac{|D|}{avgdl})}$
+        LaTeX: $\frac{(k_1 + 1) \times f(d_i, D)}{f(d_i, D) + k_1 \times (1 - b + b \times \frac{|D|}{avgdl})}$
         where:
             f(d_i, D) is frequency of term `d_i ∈ D`
             |D| is the document length
@@ -244,7 +244,7 @@ class BM25Encoder(SparseEncoder, FittableMixin, AsymmetricSparseMixin):
         queries_ids = self._tokenizer.tokenize(documents, pad=True)
         tf = self._tf(queries_ids)  # (batch_size, vocab_size)
         tf_sum = tf.sum(axis=1)  # (batch_size, 1)
-        tf_normed = tf / (
+        tf_normed = ((self.k1 + 1.0) * tf) / (
             self.k1
             * ((1.0 - self.b) + self.b * (tf_sum[:, np.newaxis] / self._avg_doc_len))
             + tf
