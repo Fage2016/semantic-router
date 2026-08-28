@@ -246,7 +246,7 @@ class BM25Encoder(SparseEncoder, FittableMixin, AsymmetricSparseMixin):
         tf_sum = tf.sum(axis=1)  # (batch_size, 1)
         tf_normed = tf / (
             self.k1
-            * (1.0 - self.b * self.b * (tf_sum[:, np.newaxis] / self._avg_doc_len))
+            * ((1.0 - self.b) + self.b * (tf_sum[:, np.newaxis] / self._avg_doc_len))
             + tf
         )  # (batch_size, vocab_size)
 
