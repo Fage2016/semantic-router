@@ -153,7 +153,9 @@ class WordTokenizer(BaseTokenizer):
         return np.array([ids + [0] * (width - len(ids)) for ids in batch])
 
 
-VOCAB = ["alpha", "beta", "gamma", "delta", "epsilon", "zeta"]
+# "eta" is in the tokenizer vocabulary but never appears in CORPUS, so it
+# exercises the df=0 path.
+VOCAB = ["alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta"]
 
 # Document lengths 2, 3 and 4, so avgdl is exactly 3.0.
 CORPUS = [
@@ -213,6 +215,42 @@ class TestBM25ATIREFormula:
         for embedding in word_encoder.encode_documents(documents):
             values = embedding.embedding[:, 1]
             assert np.all(values > 0.0)
+
+    def test_repeated_query_terms_are_weighted_by_frequency(self, word_encoder):
+        """The paper sums over query term occurrences, so a term repeated in the
+        query must carry proportionally more weight than a term appearing once.
+        """
+        # "alpha" and "epsilon" both appear in exactly one CORPUS document, so
+        # their IDF is equal and any weight difference comes from query
+        # term frequency alone.
+        alpha_id = VOCAB.index("alpha") + 1
+        epsilon_id = VOCAB.index("epsilon") + 1
+
+        once = word_encoder.encode_queries(["alpha epsilon"])[0].to_dict()
+        twice = word_encoder.encode_queries(["alpha alpha epsilon"])[0].to_dict()
+
+        assert once[alpha_id] == pytest.approx(once[epsilon_id])
+
+        # Repeating "alpha" must double its weight relative to "epsilon".
+        assert twice[alpha_id] / twice[epsilon_id] == pytest.approx(2.0)
+        assert twice[alpha_id] > once[alpha_id]
+
+    def test_query_weights_sum_to_one(self, word_encoder):
+        """Deviation from the paper: query weights are L1 normalised."""
+        for query in ["alpha", "alpha beta", "alpha alpha beta gamma"]:
+            embedding = word_encoder.encode_queries([query])[0]
+            assert embedding.embedding[:, 1].sum() == pytest.approx(1.0)
+
+    def test_query_terms_outside_corpus_are_dropped(self, word_encoder):
+        """Terms absent from the corpus have df=0, so no IDF can be computed and
+        they must not contribute weight.
+        """
+        eta_id = VOCAB.index("eta") + 1
+        weights = word_encoder.encode_queries(["alpha eta"])[0].to_dict()
+
+        assert weights.get(eta_id, 0.0) == pytest.approx(0.0)
+        # The remaining weight still normalises to 1.
+        assert sum(weights.values()) == pytest.approx(1.0)
 
     def test_longer_documents_score_lower(self, word_encoder):
         """A single occurrence of a term is worth less in a longer document."""

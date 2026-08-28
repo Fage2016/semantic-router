@@ -193,16 +193,35 @@ class BM25Encoder(SparseEncoder, FittableMixin, AsymmetricSparseMixin):
             raise ValueError("No documents provided for encoding")
 
         # Convert queries to token counts
-        queries_ids = self._tokenizer.tokenize(queries)
+        queries_ids = self._tokenizer.tokenize(queries, pad=True)
         df = self._df(queries_ids)  # (batch_size, vocab_size)
         N = self.corpus_size
+
+        # DEVIATION FROM THE ATIRE PAPER: the paper specifies `log(N / df_t)`,
+        # whereas we compute `log((N + 1) / (df_t + 0.5))`. The `+ 0.5` avoids a
+        # division by zero and the `+ 1` keeps the numerator above the
+        # denominator, so the result is strictly positive. This preserves the
+        # property the ATIRE variant was introduced for (IDF is never negative,
+        # see footnote 1 of the paper) and stays monotonically decreasing in
+        # `df_t`, but it is a smoothed variant rather than the paper's formula.
+        # It weights common terms slightly less harshly than `log(N / df_t)`.
         df = df + np.where(df > 0, 0.5, 0)
         idf = np.divide(N + 1, df, out=np.zeros_like(df), where=df != 0)
         idf = np.log(
             idf, out=np.zeros_like(df), where=df != 0
         )  # (batch_size, vocab_size)
+
+        # The paper sums over the query terms `t ∈ q`, so a term repeated in the
+        # query contributes once per occurrence. Weighting IDF by the query term
+        # frequency is equivalent, and keeps the operation vectorised.
+        qtf = self._tf(queries_ids)  # (batch_size, vocab_size)
+        weighted_idf = idf * qtf
+
         idf_norm = np.divide(
-            idf, idf.sum(axis=1)[:, np.newaxis], out=np.zeros_like(idf), where=idf != 0
+            weighted_idf,
+            weighted_idf.sum(axis=1)[:, np.newaxis],
+            out=np.zeros_like(weighted_idf),
+            where=weighted_idf != 0,
         )
 
         return self._array_to_sparse_embeddings(idf_norm)
