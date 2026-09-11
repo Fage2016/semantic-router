@@ -184,7 +184,7 @@ class QdrantIndex(BaseIndex):
                 vectors_config=models.VectorParams(
                     size=self.dimensions, distance=self.convert_metric(self.metric)
                 ),
-                **self.config,
+                **(self.config or {}),
             )
 
         if self.namespace is not None:

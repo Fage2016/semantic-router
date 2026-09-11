@@ -13,6 +13,7 @@ from semantic_router.encoders import (
     CohereEncoder,
     OpenAIEncoder,
 )
+from semantic_router.index.base import BaseIndex
 from semantic_router.index.local import LocalIndex
 from semantic_router.index.pinecone import PineconeIndex
 from semantic_router.index.postgres import PostgresIndex
@@ -70,6 +71,7 @@ def init_index(
     """We use this function to initialize indexes with different names to avoid
     issues during testing.
     """
+    index: BaseIndex
     if index_cls is PineconeIndex:
         # Skip Pinecone tests in cloud mode unless a shared index is provided
         if os.environ.get("PINECONE_API_BASE_URL", "").startswith(
@@ -103,7 +105,9 @@ def init_index(
             index_name=effective_index_name, dimensions=dimensions, namespace=namespace
         )
     elif index_cls is PostgresIndex:
-        index = index_cls(index_name=index_name, index_prefix="", namespace=namespace)
+        index = index_cls(
+            index_name=index_name or "index", index_prefix="", namespace=namespace
+        )
     else:
         index = index_cls()
     return index

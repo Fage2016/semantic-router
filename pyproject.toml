@@ -1,6 +1,6 @@
 [project]
 name = "semantic-router"
-version = "0.1.15"
+version = "0.2.0.dev1"
 description = "Super fast semantic router for AI decision making"
 authors = [{ name = "Aurelio AI", email = "hello@aurelio.ai" }]
 requires-python = ">=3.9,<3.14"
@@ -18,12 +18,18 @@ dependencies = [
     "aiohttp>=3.10.11,<4",
     "tornado>=6.4.2,<7",
     "urllib3>=1.26,<3",
-    # https://www.cve.org/CVERecord?id=CVE-2026-42208 explains >=1.83.7 
-    "litellm>=1.83.7",
     "openai>=1.10.0,<3.0.0",
+    "cohere>=5.9.4,<6.00",
+    "mistralai>=1.0.0,<2.0.0",
+    "voyageai>=0.4.1",
 ]
 
 [project.optional-dependencies]
+# only required by LiteLLMEncoder; the provider-specific encoders use their own SDKs
+litellm = [
+    # https://www.cve.org/CVERecord?id=CVE-2026-42208 explains >=1.83.7
+    "litellm>=1.83.7",
+]
 ollama = ["ollama>=0.1.7"]
 local = [
     "transformers>=4.36.2 ; python_version < '3.13'",
@@ -39,7 +45,6 @@ vision = [
     "pillow>=10.2.0,<11.0.0 ; python_version < '3.13'",
     "torch>=2.6.0 ; python_version < '3.13'"
 ]
-mistralai = ["mistralai>=1.0.0,<2.0.0"]
 qdrant = ["qdrant-client>=1.11.1,<2"]
 google = ["google-cloud-aiplatform>=1.45.0,<2"]
 bedrock = [
@@ -51,7 +56,6 @@ postgres = [
 ]
 fastembed = ["fastembed>=0.3.0,<0.4 ; python_version < '3.13'"]
 docs = ["pydoc-markdown>=4.8.2 ; python_version < '3.12'"]
-cohere = ["cohere>=5.9.4,<6.00"]
 dev = [
     "ipykernel>=6.25.0,<7",
     "ruff>=0.11.2,<0.12",
@@ -66,19 +70,20 @@ dev = [
     "requests-mock>=1.12.1,<2",
     "types-requests>=2.31.0,<3",
     "dagger-io>=0.1.1 ; python_version >= '3.11'",
-    "python-dotenv>=1.0.0,<2"
+    "python-dotenv>=1.0.0,<2",
+    # needed so `mypy semantic_router/` can resolve the LiteLLMEncoder import
+    "semantic-router[litellm]",
 ]
 all = [
     "semantic-router[local]",
     "semantic-router[pinecone]",
     "semantic-router[vision]",
-    "semantic-router[mistralai]",
     "semantic-router[qdrant]",
     "semantic-router[google]",
     "semantic-router[bedrock]",
     "semantic-router[postgres]",
     "semantic-router[fastembed]",
-    "semantic-router[cohere]",
+    "semantic-router[litellm]",
     "semantic-router[dev]",
     "semantic-router[ollama]",
     "pytest-timeout",
