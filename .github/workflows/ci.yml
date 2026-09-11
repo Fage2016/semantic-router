@@ -95,10 +95,10 @@ jobs:
           path: .fastembed_cache
           key: fastembed-all-MiniLM-L6-v2
 
-      # Every extra except the torch-based ones, which the unit tests skip
-      # anyway and which would dominate install time.
+      # Every extra except the torch-based ones (`all` re-includes them, so it
+      # is excluded too). The tests that need torch skip when it is absent.
       - name: Install
-        run: uv sync --locked --all-extras --no-extra local --no-extra vision
+        run: uv sync --locked --all-extras --no-extra all --no-extra local --no-extra vision
 
       - name: Wait for pinecone-local
         run: |

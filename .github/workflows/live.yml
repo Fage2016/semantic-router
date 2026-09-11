@@ -124,7 +124,7 @@ jobs:
           enable-cache: true
 
       - name: Install
-        run: uv sync --locked --all-extras --no-extra local --no-extra vision
+        run: uv sync --locked --all-extras --no-extra all --no-extra local --no-extra vision
 
       - name: Wait for pinecone-local
         run: |
