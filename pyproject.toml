@@ -55,7 +55,22 @@ postgres = [
     "psycopg[binary]>=3.1.0,<4",
 ]
 fastembed = ["fastembed>=0.7.0,<1 ; python_version >= '3.10'"]
-docs = ["pydoc-markdown>=4.8.2 ; python_version < '3.12'"]
+all = [
+    "semantic-router[local]",
+    "semantic-router[pinecone]",
+    "semantic-router[vision]",
+    "semantic-router[qdrant]",
+    "semantic-router[google]",
+    "semantic-router[bedrock]",
+    "semantic-router[postgres]",
+    "semantic-router[fastembed]",
+    "semantic-router[litellm]",
+    "semantic-router[ollama]",
+]
+
+# Development tooling. `uv sync` and `uv run` install the `dev` group by default,
+# so a fresh clone gets pytest, ruff and mypy without asking for any extra.
+[dependency-groups]
 dev = [
     "ipykernel>=6.25.0,<7",
     "ruff>=0.11.2,<0.12",
@@ -73,20 +88,7 @@ dev = [
     # needed so `mypy semantic_router/` can resolve the LiteLLMEncoder import
     "semantic-router[litellm]",
 ]
-all = [
-    "semantic-router[local]",
-    "semantic-router[pinecone]",
-    "semantic-router[vision]",
-    "semantic-router[qdrant]",
-    "semantic-router[google]",
-    "semantic-router[bedrock]",
-    "semantic-router[postgres]",
-    "semantic-router[fastembed]",
-    "semantic-router[litellm]",
-    "semantic-router[dev]",
-    "semantic-router[ollama]",
-    "pytest-timeout",
-]
+docs = ["pydoc-markdown>=4.8.2 ; python_version < '3.12'"]
 
 [tool.hatch.build.targets.sdist]
 include = ["semantic_router"]

@@ -134,7 +134,9 @@ def openai_encoder(mocker):
 
     mocker.patch.object(OpenAIEncoder, "acall", side_effect=async_mock_encoder_call)
     # Create and return the mocked encoder
-    encoder = OpenAIEncoder(name="text-embedding-3-small")
+    encoder = OpenAIEncoder(
+        name="text-embedding-3-small", openai_api_key="test_api_key"
+    )
     return encoder
 
 
@@ -149,7 +151,7 @@ def mock_openai_llm(mocker):
 
     mocker.patch.object(OpenAILLM, "acall", side_effect=async_mock_llm_call)
 
-    return OpenAILLM(name="fake-model-v1")
+    return OpenAILLM(name="fake-model-v1", openai_api_key="test_api_key")
 
 
 @pytest.fixture

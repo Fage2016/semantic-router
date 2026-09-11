@@ -28,9 +28,9 @@ While we encourage you to initiate a draft Pull Request early to get feedback on
 
 3. Create the virtual environment and install the project with the extras the tests need:
     ```
-    uv sync --extra dev --extra pinecone --extra qdrant --extra postgres --extra fastembed
+    uv sync --extra pinecone --extra qdrant --extra postgres --extra fastembed
     ```
-    `uv sync --extra all` also works if you want every optional dependency (this pulls in torch and other large packages).
+    The test and lint tooling (pytest, ruff, mypy) is in the default `dev` dependency group, so every `uv sync` and `uv run` includes it. `uv sync --extra all` also works if you want every optional dependency (this pulls in torch and other large packages).
 
 4. Install [Docker](https://docs.docker.com/get-docker/). The integration tests run against local containers.
 

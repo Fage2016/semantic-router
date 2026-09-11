@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: "3.13"
           enable-cache: true
-      - run: uv sync --locked --extra dev
+      - run: uv sync --locked
       - run: make lint
 
   test:
@@ -95,12 +95,10 @@ jobs:
           path: .fastembed_cache
           key: fastembed-all-MiniLM-L6-v2
 
-      # Everything except the torch-based extras, which the unit tests skip
+      # Every extra except the torch-based ones, which the unit tests skip
       # anyway and which would dominate install time.
       - name: Install
-        run: >-
-          uv sync --locked --all-extras
-          --no-extra local --no-extra vision --no-extra docs
+        run: uv sync --locked --all-extras --no-extra local --no-extra vision
 
       - name: Wait for pinecone-local
         run: |
@@ -113,3 +111,5 @@ jobs:
 
       - name: Test
         run: make test
+        env:
+          PYTEST_ADDOPTS: --durations=15
