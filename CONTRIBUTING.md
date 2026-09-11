@@ -11,7 +11,7 @@ Please follow these guidelines when making a contribution:
     - **PR title** must be a [conventional commit](https://www.conventionalcommits.org/) subject of at most 60 characters, e.g. `feat: add Foo encoder` or `fix: handle empty utterances`.
     - **Lint**: run `make lint` locally (`make format` fixes most issues automatically).
     - **Tests**: run `make test` locally (see [Running the tests](#running-the-tests)). The same suite runs in CI for every pull request, including ones from forks, and needs no API keys.
-    - Add tests for new code in the appropriate directory (see [Test tiers](#test-tiers)). Codecov will flag new code that isn't covered.
+    - Add tests for new code in the appropriate directory (see [Test tiers](#test-tiers)). `make test_cov` shows what your change leaves uncovered.
 
 > **Feedback and Discussion:**
 While we encourage you to initiate a draft Pull Request early to get feedback on your implementation, we also highly value discussions and questions. If you're unsure about any aspect of your contribution or need clarification on the project's direction, please don't hesitate to use the [Issues section](https://github.com/aurelio-labs/semantic-router/issues) of our repository. Engaging in discussions or asking questions before starting your work can help ensure that your efforts align well with the project's goals and existing work.

@@ -36,7 +36,7 @@ test_live:
 	$(PYTEST) -m live tests
 
 test_cov:
-	$(PYTEST) -m "not live" --cov=semantic_router --cov-report=term-missing --cov-report=xml tests
+	$(PYTEST) -m "not live" --cov=semantic_router --cov-report=term-missing tests
 
 # Start / stop the local service containers used by the integration tests.
 services:

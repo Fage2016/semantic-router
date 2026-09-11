@@ -23,7 +23,7 @@ make test
 make test_unit        # No services needed
 make test_integration # Real index backends via the local containers
 make test_live        # Tests marked `live` (OpenAI, Cohere). Needs keys in .env
-make test_cov         # Default suite with coverage (what CI runs)
+make test_cov         # Default suite with a coverage report
 
 # Run a single test file / function
 uv run pytest tests/unit/test_route.py -vv
