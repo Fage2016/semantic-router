@@ -117,6 +117,11 @@ jobs:
         with:
           ref: ${{ steps.ref.outputs.ref }}
           persist-credentials: false
+          # actions/checkout refuses fork code under pull_request_target unless
+          # told otherwise. Running a fork's code with the two API keys is the
+          # point of this workflow; the `run-live-tests` label applied after a
+          # human review is the safeguard (see the comment at the top).
+          allow-unsafe-pr-checkout: true
 
       - uses: astral-sh/setup-uv@v6
         with:
