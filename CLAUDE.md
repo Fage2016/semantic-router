@@ -13,18 +13,20 @@ This project uses `uv` for dependency management. All commands should be prefixe
 
 ### Testing
 ```bash
-# Run all tests with coverage
+# Start the local service containers (pinecone-local, pgvector, qdrant). Needed
+# once per session; the integration tests run against them. No API keys needed.
+make services
+
+# Default suite: everything except tests that call paid APIs. ~20s, parallel.
 make test
 
-# Run specific test categories
-make test_unit        # Unit tests only
-make test_functional  # Functional tests only  
-make test_integration # Integration tests only
+make test_unit        # No services needed
+make test_integration # Real index backends via the local containers
+make test_live        # Tests marked `live` (OpenAI, Cohere). Needs keys in .env
+make test_cov         # Default suite with coverage (what CI runs)
 
-# Run a single test file
+# Run a single test file / function
 uv run pytest tests/unit/test_route.py -vv
-
-# Run a single test function
 uv run pytest tests/unit/test_route.py::test_function_name -vv
 ```
 
@@ -94,10 +96,14 @@ User Query → Router → Encoder → Embeddings → Index → Similarity Search
 4. Add tests in the appropriate test directory (unit/functional/integration)
 
 ### Testing Guidelines
-- Unit tests go in `tests/unit/` and test individual components in isolation
-- Functional tests go in `tests/functional/` and test component interactions
-- Integration tests go in `tests/integration/` and test with real external services
-- Mock external API calls in unit tests
+- Prefer integration tests against the real index backends (they run locally and
+  in CI via the containers in `compose.yaml`, so they are cheap)
+- Tests that call a paid API must be marked `@pytest.mark.live`; they are
+  excluded from `make test` and CI on pull requests, and run from `live.yml`
+- Every test must use a uniquely named index/table (see `per_test_id()` /
+  `uuid` patterns in the existing tests) so the suite can run in parallel;
+  `tests/conftest.py` deletes whatever a test creates
+- Unit tests go in `tests/unit/`, integration tests in `tests/integration/`
 - Use `pytest-mock` for mocking
 
 ### Common Gotchas

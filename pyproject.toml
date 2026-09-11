@@ -54,7 +54,7 @@ bedrock = [
 postgres = [
     "psycopg[binary]>=3.1.0,<4",
 ]
-fastembed = ["fastembed>=0.3.0,<0.4 ; python_version < '3.13'"]
+fastembed = ["fastembed>=0.7.0,<1 ; python_version >= '3.10'"]
 docs = ["pydoc-markdown>=4.8.2 ; python_version < '3.12'"]
 dev = [
     "ipykernel>=6.25.0,<7",
@@ -69,7 +69,6 @@ dev = [
     "types-pyyaml>=6.0.12.12,<7",
     "requests-mock>=1.12.1,<2",
     "types-requests>=2.31.0,<3",
-    "dagger-io>=0.1.1 ; python_version >= '3.11'",
     "python-dotenv>=1.0.0,<2",
     # needed so `mypy semantic_router/` can resolve the LiteLLMEncoder import
     "semantic-router[litellm]",
@@ -105,6 +104,9 @@ build-backend = "hatchling.build"
 [tool.ruff]
 line-length = 88
 
+[tool.ruff.format]
+exclude = ["*.ipynb"]
+
 [tool.ruff.lint]
 select = ["E", "F", "I", "T201", "NPY201"]
 ignore = ["E501"]
@@ -131,4 +133,11 @@ torch = [
 torchvision = [
     { index = "pytorch-nightly", marker = "python_version >= '3.13' and sys_platform == 'darwin'"  },
     { index = "pytorch-cpu", marker = "python_version < '3.13' or sys_platform != 'darwin'" },
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+markers = [
+    "live: calls a paid third-party API (OpenAI, Cohere, ...). Needs real keys; excluded from the default `make test` run.",
 ]

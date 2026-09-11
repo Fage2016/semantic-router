@@ -156,18 +156,29 @@ Common errors and solutions:
 
 ## CI/CD Configuration
 
-Example GitHub Actions configuration:
+Semantic Router's own CI runs the Pinecone tests against the local emulator as a
+service container, so no API key or quota is needed. The relevant part of
+`.github/workflows/ci.yml`:
 
 ```yaml
-env:
-  PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
-  PINECONE_INDEX_NAME: ${{ secrets.PINECONE_INDEX_NAME }}
+services:
+  pinecone:
+    image: ghcr.io/pinecone-io/pinecone-local:latest
+    env:
+      PORT: "5080"
+      PINECONE_HOST: localhost
+    ports:
+      - 5080-5199:5080-5199  # one data-plane port per index
 
-steps:
-  - name: Run tests
-    run: |
-      PINECONE_API_BASE_URL="https://api.pinecone.io" pytest
+env:
+  PINECONE_API_KEY: pclocal
+  PINECONE_API_BASE_URL: http://localhost:5080
 ```
+
+To run the same tests against Pinecone cloud instead, set a real
+`PINECONE_API_KEY`, `PINECONE_API_BASE_URL=https://api.pinecone.io`, and
+`PINECONE_INDEX_NAME` to an existing index (tests isolate themselves in
+namespaces to stay within index quotas).
 
 ## Example Notebooks
 

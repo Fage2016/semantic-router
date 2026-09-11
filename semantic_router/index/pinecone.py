@@ -887,31 +887,19 @@ class PineconeIndex(BaseIndex):
         else:
             filter_query = None
         if sparse_vector is not None:
-            logger.error(f"sparse_vector exists:{sparse_vector}")
             if isinstance(sparse_vector, dict):
                 sparse_vector = SparseEmbedding.from_dict(sparse_vector)
             if isinstance(sparse_vector, SparseEmbedding):
                 # unnecessary if-statement but mypy didn't like this otherwise
                 sparse_vector = sparse_vector.to_pinecone()
-        try:
-            results = self.index.query(
-                vector=[query_vector_list],
-                sparse_vector=sparse_vector,
-                top_k=top_k,
-                filter=filter_query,
-                include_metadata=True,
-                namespace=self.namespace,
-            )
-        except Exception:
-            logger.error("retrying query with vector as str")
-            results = self.index.query(
-                vector=query_vector_list,
-                sparse_vector=sparse_vector,
-                top_k=top_k,
-                filter=filter_query,
-                include_metadata=True,
-                namespace=self.namespace,
-            )
+        results = self.index.query(
+            vector=query_vector_list,
+            sparse_vector=sparse_vector,
+            top_k=top_k,
+            filter=filter_query,
+            include_metadata=True,
+            namespace=self.namespace,
+        )
         scores = [result["score"] for result in results["matches"]]
         route_names = [result["metadata"]["sr_route"] for result in results["matches"]]
         return np.array(scores), route_names

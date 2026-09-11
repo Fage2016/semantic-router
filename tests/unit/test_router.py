@@ -30,6 +30,12 @@ from semantic_router.schema import RouteChoice, SparseEmbedding
 PINECONE_BASE_URL = os.getenv("PINECONE_API_BASE_URL", "http://localhost:5080")
 
 
+def qdrant_kwargs() -> dict:
+    """Use a real Qdrant server when QDRANT_URL is set, otherwise in-memory."""
+    url = os.getenv("QDRANT_URL")
+    return {"location": None, "url": url} if url else {}
+
+
 def mock_encoder_call(utterances):
     # Define a mapping of utterances to return values
     mock_responses = {
@@ -266,7 +272,11 @@ def init_index(
     index: BaseIndex
     if index_cls is QdrantIndex:
         index_name = index_name or f"test_{uuid.uuid4().hex}"
-        return QdrantIndex(index_name=index_name, init_async_index=init_async_index)
+        return QdrantIndex(
+            index_name=index_name,
+            init_async_index=init_async_index,
+            **qdrant_kwargs(),
+        )
     if index_cls is PineconeIndex:
         # In CI cloud mode, require a shared index to avoid quota/timeouts
         cloud_mode = os.getenv("PINECONE_API_BASE_URL", "").startswith(
@@ -293,8 +303,9 @@ def init_index(
             base_url=PINECONE_BASE_URL,
         )
     elif index_cls is PostgresIndex:
+        # Unique table per test so tests can run in parallel against one database.
         index = index_cls(
-            index_name=index_name or "test_index",
+            index_name=index_name or f"test_{uuid.uuid4().hex}",
             index_prefix="",
             namespace=namespace,
             dimensions=dimensions,

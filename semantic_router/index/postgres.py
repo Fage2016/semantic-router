@@ -1115,16 +1115,6 @@ class PostgresIndex(BaseIndex):
             raise TypeError("Index has not established a connection to Postgres")
         try:
             with self.conn.cursor() as cur:
-                # Forcibly terminate other connections to the database (CI safety)
-                cur.execute(
-                    """
-                    SELECT pg_terminate_backend(pid)
-                    FROM pg_stat_activity
-                    WHERE datname = current_database()
-                      AND pid <> pg_backend_pid();
-                    """
-                )
-                self.conn.commit()
                 cur.execute(f"DROP TABLE IF EXISTS {table_name}")
                 self.conn.commit()
         except Exception:
