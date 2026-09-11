@@ -85,8 +85,6 @@ dev = [
     "requests-mock>=1.12.1,<2",
     "types-requests>=2.31.0,<3",
     "python-dotenv>=1.0.0,<2",
-    # needed so `mypy semantic_router/` can resolve the LiteLLMEncoder import
-    "semantic-router[litellm]",
 ]
 docs = ["pydoc-markdown>=4.8.2 ; python_version < '3.12'"]
 
