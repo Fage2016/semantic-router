@@ -26,11 +26,13 @@ from semantic_router.routers import HybridRouter, SemanticRouter
 from semantic_router.schema import RouteChoice
 from semantic_router.utils.logger import logger
 
-# pinecone-local is consistent immediately; the cloud service needs a moment.
+# The retry delay only applies when an assertion fails and is retried.
+# pinecone-local is consistent immediately, so retries never need to wait
+# there; the cloud service needs a moment after writes.
 PINECONE_LOCAL = os.getenv("PINECONE_API_BASE_URL", "http://localhost:5080").startswith(
     "http://"
 )
-PINECONE_SLEEP = 1 if PINECONE_LOCAL else 8
+PINECONE_SLEEP = 0 if PINECONE_LOCAL else 8
 RETRY_COUNT = 10
 
 

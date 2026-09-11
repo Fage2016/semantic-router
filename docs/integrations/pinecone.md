@@ -154,31 +154,27 @@ Common errors and solutions:
 - **404 (Not Found)**: Index or namespace doesn't exist yet (will be created)
 - **Dimension Mismatch**: Ensure encoder dimensions match index dimensions
 
-## CI/CD Configuration
+## Testing without Pinecone cloud
 
-Semantic Router's own CI runs the Pinecone tests against the local emulator as a
-service container, so no API key or quota is needed. The relevant part of
-`.github/workflows/ci.yml`:
+Pinecone's local emulator lets you run your own test suite against `PineconeIndex`
+with no API key and no quota:
 
-```yaml
-services:
-  pinecone:
-    image: ghcr.io/pinecone-io/pinecone-local:latest
-    env:
-      PORT: "5080"
-      PINECONE_HOST: localhost
-    ports:
-      - 5080-5199:5080-5199  # one data-plane port per index
-
-env:
-  PINECONE_API_KEY: pclocal
-  PINECONE_API_BASE_URL: http://localhost:5080
+```bash
+docker run -d --name pinecone-local \
+  -e PORT=5080 -e PINECONE_HOST=localhost \
+  -p 5080-5199:5080-5199 \
+  ghcr.io/pinecone-io/pinecone-local:latest
 ```
 
-To run the same tests against Pinecone cloud instead, set a real
-`PINECONE_API_KEY`, `PINECONE_API_BASE_URL=https://api.pinecone.io`, and
-`PINECONE_INDEX_NAME` to an existing index (tests isolate themselves in
-namespaces to stay within index quotas).
+```bash
+export PINECONE_API_KEY=pclocal
+export PINECONE_API_BASE_URL=http://localhost:5080
+```
+
+The emulator opens one extra port per index, counting up from 5081, so publish a
+range wide enough for the number of indexes your tests create, and delete
+indexes when you are done with them. `PineconeIndex` treats any `http://` base
+URL as the emulator and skips the cloud-only calls.
 
 ## Example Notebooks
 
