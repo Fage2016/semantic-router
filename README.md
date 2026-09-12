@@ -7,7 +7,6 @@
 <img alt="" src="https://img.shields.io/github/repo-size/aurelio-labs/semantic-router" />
 <a href="https://github.com/aurelio-labs/semantic-router/issues"><img alt="GitHub Issues" src="https://img.shields.io/github/issues/aurelio-labs/semantic-router" />
 <a href="https://github.com/aurelio-labs/semantic-router/pulls"><img alt="GitHub Pull Requests" src="https://img.shields.io/github/issues-pr/aurelio-labs/semantic-router" />
-<img src="https://codecov.io/gh/aurelio-labs/semantic-router/graph/badge.svg?token=H8OOMV2TUF" />
 <a href="https://github.com/aurelio-labs/semantic-router/blob/main/LICENSE"><img alt="Github License" src="https://img.shields.io/badge/License-MIT-yellow.svg" />
 </p>
 
